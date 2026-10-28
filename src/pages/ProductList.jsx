@@ -1,25 +1,40 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Check, ArrowRight, Sparkles, Filter } from 'lucide-react';
+import { ShoppingCart, Check, ArrowRight, Sparkles } from 'lucide-react';
 import { categories, FALLBACK_PLANT_IMAGE } from '../data/plants.js';
-import { addToCart, selectCartItems, selectCartCount } from '../features/cart/CartSlice.jsx';
+import { addItem, selectCartItems } from '../features/cart/CartSlice.jsx';
 
 export default function ProductList() {
   const dispatch = useDispatch();
-  const cartItems = useSelector(selectCartItems);
-  const cartCount = useSelector(selectCartCount);
+  const cart = useSelector(selectCartItems);
   const [activeCategoryFilter, setActiveCategoryFilter] = useState('all');
 
-  // Check if a specific plant is already in the cart
-  const isPlantInCart = (plantId) => {
-    return cartItems.some((item) => item.id === plantId);
+  // Exact calculateTotalQuantity function per rubric
+  const calculateTotalQuantity = () => {
+    return cart ? cart.reduce((total, item) => total + item.quantity, 0) : 0;
   };
+
+  const totalCartQuantity = calculateTotalQuantity();
+
+  // addedToCart dictionary derived from cart state:
+  // - Before adding: addedToCart[plant.name] is falsy -> button enabled
+  // - After adding: addedToCart[plant.name] is true -> button disabled
+  // - After removing from cart: addedToCart[plant.name] is falsy -> button re-enabled
+  const addedToCart = (cart || []).reduce((acc, item) => {
+    acc[item.name] = true;
+    return acc;
+  }, {});
 
   const handleAddToCart = (plant, categoryName) => {
     dispatch(
-      addToCart({
-        ...plant,
+      addItem({
+        id: plant.id,
+        name: plant.name,
+        cost: plant.cost || plant.price,
+        price: plant.cost || plant.price,
+        image: plant.image,
+        description: plant.description,
         category: categoryName,
       })
     );
@@ -57,10 +72,17 @@ export default function ProductList() {
               <strong>3</strong>
               <span>Categories</span>
             </div>
-            <Link to="/cart" className="view-cart-pill" aria-label={`View Cart with ${cartCount} items`}>
+            <Link
+              to="/cart"
+              className="view-cart-pill"
+              aria-label={`View Cart with ${totalCartQuantity} items`}
+            >
               <ShoppingCart size={18} aria-hidden="true" />
               <span>View Cart</span>
-              <span className="pill-badge">{cartCount}</span>
+              {/* Required cart_quantity_count class */}
+              <span className="pill-badge cart_quantity_count">
+                {totalCartQuantity}
+              </span>
             </Link>
           </div>
         </div>
@@ -115,10 +137,10 @@ export default function ProductList() {
 
             <div className="plant-grid">
               {category.plants.map((plant) => {
-                const added = isPlantInCart(plant.id);
+                const isAdded = Boolean(addedToCart[plant.name]);
 
                 return (
-                  <article key={plant.id} className="plant-card">
+                  <article key={plant.id || plant.name} className="plant-card">
                     <div className="plant-card-media">
                       <img
                         src={plant.image}
@@ -139,7 +161,7 @@ export default function ProductList() {
                       <div className="plant-card-header">
                         <h3 className="plant-card-name">{plant.name}</h3>
                         <span className="plant-card-price">
-                          ${Number(plant.price).toFixed(2)}
+                          ${Number(plant.cost || plant.price).toFixed(2)}
                         </span>
                       </div>
 
@@ -148,19 +170,20 @@ export default function ProductList() {
                       </p>
 
                       <div className="plant-card-footer">
+                        {/* Exact rubric requirement: disabled={addedToCart[plant.name]} and dispatches addItem */}
                         <button
                           type="button"
                           id={`add-to-cart-${plant.id}`}
-                          className={`add-to-cart-btn ${added ? 'is-added' : ''}`}
-                          disabled={added}
+                          className={`add-to-cart-btn ${isAdded ? 'is-added' : ''}`}
+                          disabled={addedToCart[plant.name]}
                           onClick={() => handleAddToCart(plant, category.name)}
                           aria-label={
-                            added
+                            isAdded
                               ? `${plant.name} already added to cart`
-                              : `Add ${plant.name} to cart for $${Number(plant.price).toFixed(2)}`
+                              : `Add ${plant.name} to cart for $${Number(plant.cost || plant.price).toFixed(2)}`
                           }
                         >
-                          {added ? (
+                          {isAdded ? (
                             <>
                               <Check size={18} aria-hidden="true" />
                               <span>Added to Cart</span>
@@ -183,12 +206,12 @@ export default function ProductList() {
       </div>
 
       {/* Bottom Floating Bar when user has items in cart */}
-      {cartCount > 0 && (
+      {totalCartQuantity > 0 && (
         <aside className="cart-floating-banner" aria-label="Cart Quick Summary">
           <div className="floating-banner-inner">
             <div className="floating-banner-text">
               <span className="floating-banner-count">
-                {cartCount} {cartCount === 1 ? 'plant' : 'plants'} in your cart
+                {totalCartQuantity} {totalCartQuantity === 1 ? 'plant' : 'plants'} in your cart
               </span>
               <span className="floating-banner-hint">Ready to review and checkout?</span>
             </div>

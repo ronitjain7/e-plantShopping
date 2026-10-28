@@ -2,16 +2,28 @@ import React from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Leaf, ShoppingCart } from 'lucide-react';
-import { selectCartCount } from '../features/cart/CartSlice.jsx';
+import { selectCartItems } from '../features/cart/CartSlice.jsx';
 
-export default function Navbar() {
-  const cartCount = useSelector(selectCartCount);
+export default function Navbar({ onHomeClick, onPlantsClick }) {
+  const cart = useSelector(selectCartItems);
+
+  // Exact calculateTotalQuantity function per rubric
+  const calculateTotalQuantity = () => {
+    return cart ? cart.reduce((total, item) => total + item.quantity, 0) : 0;
+  };
+
+  const totalQuantity = calculateTotalQuantity();
 
   return (
     <header className="navbar" role="banner">
       <div className="navbar-container">
         {/* Brand logo & title */}
-        <Link to="/" className="brand" aria-label="Paradise Nursery Home">
+        <Link
+          to="/"
+          className="brand"
+          aria-label="Paradise Nursery Home"
+          onClick={onHomeClick}
+        >
           <div className="brand-icon" aria-hidden="true">
             <Leaf size={22} />
           </div>
@@ -27,12 +39,14 @@ export default function Navbar() {
             to="/"
             end
             className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+            onClick={onHomeClick}
           >
             Home
           </NavLink>
           <NavLink
             to="/plants"
             className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+            onClick={onPlantsClick}
           >
             Plants
           </NavLink>
@@ -45,12 +59,16 @@ export default function Navbar() {
           <NavLink
             to="/cart"
             className={({ isActive }) => `cart-nav-button ${isActive ? 'active' : ''}`}
-            aria-label={`Shopping cart with ${cartCount} items`}
+            aria-label={`Shopping cart with ${totalQuantity} items`}
           >
             <ShoppingCart size={20} aria-hidden="true" />
             <span className="cart-label">Cart</span>
-            <span className="cart-badge" aria-label={`${cartCount} items in cart`}>
-              {cartCount}
+            {/* Required cart_quantity_count class */}
+            <span
+              className="cart-badge cart_quantity_count"
+              aria-label={`${totalQuantity} items in cart`}
+            >
+              {totalQuantity}
             </span>
           </NavLink>
         </nav>

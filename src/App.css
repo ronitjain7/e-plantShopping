@@ -41,6 +41,7 @@
 }
 
 /* Base Layout Structure */
+.app-container,
 .app-layout {
   min-height: 100vh;
   display: flex;
@@ -170,7 +171,8 @@
   box-shadow: 0 6px 16px rgba(23, 61, 43, 0.25);
 }
 
-.cart-badge {
+.cart-badge,
+.cart_quantity_count {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -192,7 +194,16 @@
   flex-direction: column;
 }
 
-/* Nature-inspired background with fallback background-color */
+/* Nature-inspired background with required .background-image class */
+.background-image {
+  background-image: url('https://images.unsplash.com/photo-1449247709967-d4461a6a6103?auto=format&fit=crop&w=2000&q=85');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+  width: 100%;
+}
+
 .hero-section {
   position: relative;
   min-height: calc(100vh - 76px);
@@ -1273,6 +1284,7 @@
 /* ==========================================================================
    About Us Page (AboutUs.jsx)
    ========================================================================== */
+.about-us-container,
 .about-us-page {
   padding-bottom: 80px;
 }

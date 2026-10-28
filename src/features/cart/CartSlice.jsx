@@ -8,18 +8,23 @@ export const cartSlice = createSlice({
   name: 'cart',
   initialState,
   reducers: {
-    // Add product with quantity 1; if already in cart, increment quantity
-    addToCart: (state, action) => {
+    // addItem: Add a plant to the cart with quantity 1; if already in cart, increment quantity
+    addItem: (state, action) => {
       const product = action.payload;
-      const existingItem = state.items.find((item) => item.id === product.id);
+      const unitCost = typeof product.cost !== 'undefined' ? Number(product.cost) : Number(product.price || 0);
+
+      const existingItem = state.items.find(
+        (item) => item.name === product.name || (product.id && item.id === product.id)
+      );
 
       if (existingItem) {
         existingItem.quantity += 1;
       } else {
         state.items.push({
-          id: product.id,
+          id: product.id || product.name,
           name: product.name,
-          price: Number(product.price),
+          cost: unitCost,
+          price: unitCost, // Keep both for full compatibility
           image: product.image,
           description: product.description,
           category: product.category,
@@ -28,58 +33,65 @@ export const cartSlice = createSlice({
       }
     },
 
-    // Increment item quantity by 1
-    increaseQuantity: (state, action) => {
-      const targetId = typeof action.payload === 'object' ? action.payload.id : action.payload;
-      const item = state.items.find((i) => i.id === targetId);
-      if (item) {
-        item.quantity += 1;
-      }
+    // removeItem: Remove the selected plant from the cart completely
+    removeItem: (state, action) => {
+      const target = action.payload;
+      const targetKey = typeof target === 'object' ? (target.name || target.id) : target;
+      state.items = state.items.filter(
+        (item) => item.name !== targetKey && item.id !== targetKey
+      );
     },
 
-    // Decrement item quantity; if at 1, remove the item safely
-    decreaseQuantity: (state, action) => {
-      const targetId = typeof action.payload === 'object' ? action.payload.id : action.payload;
-      const item = state.items.find((i) => i.id === targetId);
-      if (item) {
-        if (item.quantity > 1) {
-          item.quantity -= 1;
+    // updateQuantity: Update the quantity of the selected cart item; remove if quantity <= 0
+    updateQuantity: (state, action) => {
+      const payload = action.payload || {};
+      const targetKey = payload.name || payload.id || (typeof payload !== 'object' ? payload : null);
+      const newQuantity = typeof payload.quantity === 'number' ? payload.quantity : undefined;
+
+      if (newQuantity !== undefined) {
+        if (newQuantity <= 0) {
+          state.items = state.items.filter(
+            (item) => item.name !== targetKey && item.id !== targetKey
+          );
         } else {
-          state.items = state.items.filter((i) => i.id !== targetId);
+          const item = state.items.find(
+            (i) => i.name === targetKey || i.id === targetKey
+          );
+          if (item) {
+            item.quantity = newQuantity;
+          }
         }
       }
     },
 
-    // Remove single product completely from cart
-    removeFromCart: (state, action) => {
-      const targetId = typeof action.payload === 'object' ? action.payload.id : action.payload;
-      state.items = state.items.filter((i) => i.id !== targetId);
-    },
-
-    // Empty entire cart
+    // Backwards-compatible clearCart
     clearCart: (state) => {
       state.items = [];
     },
   },
 });
 
+// Exact required reducer action exports
 export const {
-  addToCart,
-  increaseQuantity,
-  decreaseQuantity,
-  removeFromCart,
+  addItem,
+  removeItem,
+  updateQuantity,
   clearCart,
 } = cartSlice.actions;
+
+// Aliases for backwards compatibility
+export const addToCart = addItem;
+export const removeFromCart = removeItem;
 
 // Selectors
 export const selectCartItems = (state) => state.cart.items;
 
-// Sum of quantities of all items (e.g. 2 snake plants + 3 pothos = 5)
+// Sum of quantities of all items
 export const selectCartCount = (state) =>
   state.cart.items.reduce((total, item) => total + item.quantity, 0);
 
-// Sum of (unit price * quantity) across all items
+// Sum of (cost * quantity) across all items
 export const selectCartTotal = (state) =>
-  state.cart.items.reduce((total, item) => total + item.price * item.quantity, 0);
+  state.cart.items.reduce((total, item) => total + (item.cost || item.price || 0) * item.quantity, 0);
 
 export default cartSlice.reducer;

@@ -1,4 +1,4 @@
-# Paradise Nursery Shopping Application
+# Paradise Nursery Shopping Application (`e-plantShopping`)
 
 An elegant, responsive houseplant e-commerce web application built for the final course project assignment. Paradise Nursery allows customers to browse plants across curated categories, add green companions to their shopping cart, manage quantities dynamically, and calculate line-item and overall order costs with real-time Redux state management.
 
@@ -6,60 +6,74 @@ An elegant, responsive houseplant e-commerce web application built for the final
 
 ## Table of Contents
 1. [Project Overview](#project-overview)
-2. [Features](#features)
+2. [Features & Rubric Compliance](#features--rubric-compliance)
 3. [Technology Stack](#technology-stack)
 4. [Folder Structure](#folder-structure)
-5. [Required Assignment Files](#required-assignment-files)
+5. [Required Assignment Files & Submission URLs](#required-assignment-files--submission-urls)
 6. [Installation & Setup](#installation--setup)
 7. [Running the Application](#running-the-application)
 8. [Building for Production](#building-for-production)
-9. [Diagnosis & Fix for the White-Screen Issue](#diagnosis--fix-for-the-white-screen-issue)
-10. [Submission & GitHub File URLs Guide](#submission--github-file-urls-guide)
+9. [How to Rename or Push to `e-plantShopping` on GitHub](#how-to-rename-or-push-to-e-plantshopping-on-github)
 
 ---
 
 ## Project Overview
 
 Paradise Nursery is an online houseplant shopping boutique designed to make bringing nature home simple and enjoyable. The application features:
-- A welcoming **Landing Page** with botanical storytelling and a direct "Get Started" call to action.
-- A **Plant Catalog** organized into three distinct categories (Easy-Care Favorites, Statement Plants, Pet-Friendly Picks) containing 18 distinct houseplant entries with images, names, prices, and descriptions.
-- A **Centralized Redux Cart** supporting adding items, incrementing and decrementing quantities, safe removal at zero, independent button states, and live cart count badges.
-- A dedicated **Shopping Cart Page** with per-item calculations, order summaries, a continue-shopping workflow, and an accessible checkout demo message.
-- A dedicated **About Us Page** highlighting the nursery's mission, values, and plant care philosophy.
+- A welcoming **Landing Page** with the exact heading `Welcome to Paradise Nursery`, `.background-image` class styling, and a state-driven `handleGetStartedClick` that dynamically displays the product listing.
+- A **Plant Catalog** organized into three distinct categories (Easy-Care Favorites, Statement Plants, Pet-Friendly Picks) containing 18 distinct houseplant entries with images, names, prices/costs, and descriptions.
+- A **Centralized Redux Cart** implementing the exact required actions (`addItem`, `removeItem`, `updateQuantity`), independent `addedToCart[plant.name]` button states, and `calculateTotalQuantity()` with the `.cart_quantity_count` indicator badge.
+- A dedicated **Shopping Cart Page** rendering via `cart.map()`, with `item.cost`, line-item totals (`calculateTotalCost`), overall grand total (`calculateTotalAmount`), increment/decrement handlers, continue-shopping navigation, and a checkout "Coming Soon!" demo modal.
+- A dedicated **About Us Page** enclosed in `.about-us-container` explaining the nursery's purpose, plant offerings, and customer care philosophy.
 
 ---
 
-## Features
+## Features & Rubric Compliance
 
-- **Botanical Hero Landing Page**: Prominently introduces Paradise Nursery, welcoming description, high-contrast overlay on a nature-inspired background with fallback background color, and a React Router "Get Started" button.
-- **Shared Sticky Navigation**: Live cart counter badge calculated directly from Redux state (sum of all plant quantities), brand mark, and active route indicators.
-- **Categorized Catalog**:
-  - *Easy-Care Favorites* (6 plants): Snake Plant, ZZ Plant, Golden Pothos, Spider Plant, Peace Lily, Jade Plant.
-  - *Statement Plants* (6 plants): Monstera Deliciosa, Rubber Tree, Bird of Paradise, Fiddle Leaf Fig, Areca Palm, Dragon Tree.
-  - *Pet-Friendly Picks* (6 plants): Boston Fern, Parlor Palm, Rattlesnake Calathea, Prayer Plant, Zebra Haworthia, Watermelon Peperomia.
-- **Smart Add-to-Cart Behavior**:
-  - When a plant is added, it is stored in Redux with initial quantity `1`.
-  - Its button immediately updates to "Added to Cart" and becomes disabled while in the cart.
-  - Other plant cards remain independently enabled.
-  - If removed from the cart, the button is re-enabled automatically.
-- **Full Shopping Cart Controls**:
-  - Line total dynamic calculation: `unit price × quantity`.
-  - Overall cart total: `sum of each item's price × quantity`.
-  - `+` increases quantity and updates navbar count & totals.
-  - `-` decreases quantity; automatically removes item if quantity reaches 1.
-  - "Remove" deletes the selected plant from the cart.
-  - "Continue Shopping" links back to `/plants`.
-  - "Checkout" presents the required demonstration notification: `"Coming Soon! Checkout will be available in a future update."`
-  - Friendly empty cart state with direct link to explore plants.
+- **Landing Page State Flow (`App.jsx`)**:
+  - Outermost wrapper uses `.app-container`.
+  - Prominently displays the exact heading `Welcome to Paradise Nursery`.
+  - Includes `.background-image` class with a valid nature image and fallback styling.
+  - Implements `const [showProductList, setShowProductList] = useState(false);` and `handleGetStartedClick`.
+  - Clicking Get Started toggles state to dynamically render the product listing.
+- **Shared Sticky Navigation (`Navbar.jsx`)**:
+  - Implements `calculateTotalQuantity()` to sum all plant quantities.
+  - Displays dynamic quantity badge with the required `.cart_quantity_count` class.
+  - Provides working navigation to Home, Plants, About Us, and Cart.
+- **Plant Catalog (`ProductList.jsx`)**:
+  - 3 categories, each with 6 unique plants (18 plants total).
+  - Every card features a thumbnail, name, description, and price/cost.
+  - Add to Cart button dispatches `addItem(product)`.
+  - Button disabled state is controlled directly by `addedToCart[plant.name]`.
+  - Removing an item from the cart automatically re-enables its Add to Cart button.
+  - Includes `calculateTotalQuantity()` and `.cart_quantity_count` indicator.
+- **Redux Cart Slice (`CartSlice.jsx`)**:
+  - Exports exact required reducer actions: `addItem`, `removeItem`, `updateQuantity`.
+  - Maintains clean `items` collection with `cost`, `price`, `quantity`, and product metadata.
+  - Updates quantities consistently; automatically removes items when quantity drops to zero.
+- **Shopping Cart Page (`CartItem.jsx`)**:
+  - Iterates over cart items using `cart.map()`.
+  - Displays `item.cost` as unit cost and `item.quantity` as quantity.
+  - Calculates line item subtotal via `calculateTotalCost(item)` (`item.cost * item.quantity`).
+  - Calculates grand total via `calculateTotalAmount()`.
+  - `handleIncrement(item)` updates state through `updateQuantity`.
+  - `handleDecrement(item)` updates state through `updateQuantity` and safely removes item at zero.
+  - `handleRemove(item)` removes item through `removeItem`.
+  - "Continue Shopping" button returns user to plant catalog.
+  - "Checkout" button displays a "Coming Soon!" notification.
+  - Helpful empty-cart view when no items exist.
+- **About Us Page (`AboutUs.jsx`)**:
+  - Uses exact required outer container class `.about-us-container`.
+  - Details mission, experience-level plant selections, and nursery standards.
 
 ---
 
 ## Technology Stack
 
-- **React 18**: Component-based UI architecture
-- **Vite 6**: Fast frontend tooling and dev server
+- **React 18**: Modern component architecture and hooks
+- **Vite 6**: Fast development server and build tool
 - **JavaScript & JSX**: Clear, beginner-friendly frontend logic
-- **React Router DOM 6**: Single-page application client routing without page reloads
+- **React Router DOM 6**: Single-page application client-side routing
 - **Redux Toolkit & React Redux**: Centralized state management for shopping cart
 - **Vanilla CSS3**: Modern botanical design tokens, CSS Grid, Flexbox, responsive typography, and accessible `:focus-visible` outlines
 - **Lucide React**: Clean botanical and e-commerce vector icons
@@ -69,7 +83,7 @@ Paradise Nursery is an online houseplant shopping boutique designed to make brin
 ## Folder Structure
 
 ```
-paradise-nursery/
+e-plantShopping/
 ├── README.md
 ├── package.json
 ├── package-lock.json
@@ -97,25 +111,31 @@ paradise-nursery/
 
 ---
 
-## Required Assignment Files
+## Required Assignment Files & Submission URLs
 
-The course assignment specifically requires the following seven files at these exact paths:
+The assignment rubric requires public submission URLs pointing to the `e-plantShopping` repository on the `main` branch:
 
-1. `README.md`
-2. `src/pages/AboutUs.jsx`
-3. `src/App.css`
-4. `src/App.jsx`
-5. `src/features/cart/CartSlice.jsx`
-6. `src/pages/ProductList.jsx`
-7. `src/pages/CartItem.jsx`
+1. **`README.md`**:  
+   `https://github.com/ronitjain7/e-plantShopping/blob/main/README.md`
+2. **`src/pages/AboutUs.jsx`**:  
+   `https://github.com/ronitjain7/e-plantShopping/blob/main/src/pages/AboutUs.jsx`
+3. **`src/App.css`**:  
+   `https://github.com/ronitjain7/e-plantShopping/blob/main/src/App.css`
+4. **`src/App.jsx`**:  
+   `https://github.com/ronitjain7/e-plantShopping/blob/main/src/App.jsx`
+5. **`src/features/cart/CartSlice.jsx`**:  
+   `https://github.com/ronitjain7/e-plantShopping/blob/main/src/features/cart/CartSlice.jsx`
+6. **`src/pages/ProductList.jsx`**:  
+   `https://github.com/ronitjain7/e-plantShopping/blob/main/src/pages/ProductList.jsx`
+7. **`src/pages/CartItem.jsx`**:  
+   `https://github.com/ronitjain7/e-plantShopping/blob/main/src/pages/CartItem.jsx`
 
 ---
 
 ## Installation & Setup
 
-1. Clone or download your repository to your local computer.
-2. Open your terminal in the project directory (`paradise-nursery`).
-3. Install project dependencies:
+1. Open your terminal in the project directory (`e-plantShopping`).
+2. Install project dependencies:
 
 ```bash
 npm install
@@ -125,14 +145,13 @@ npm install
 
 ## Running the Application
 
-To start the Vite development server with Hot Module Replacement (HMR):
+To start the local Vite development server:
 
 ```bash
 npm run dev
 ```
 
-Then open the local URL in your web browser:
-`http://localhost:5173/`
+Open `http://localhost:5173/` in your browser.
 
 ---
 
@@ -144,63 +163,36 @@ To test and compile the production bundle:
 npm run build
 ```
 
-The compiled output will be generated in the `dist/` directory.
-
-To preview the production build locally:
-
-```bash
-npm run preview
-```
+The compiled output will be generated in the `dist/` directory with zero errors.
 
 ---
 
-## Diagnosis & Fix for the White-Screen Issue
+## How to Rename or Push to `e-plantShopping` on GitHub
 
-### Root Cause
-When running the development server (`npm run dev`), the browser encountered a white screen with the console error:
-`ReferenceError: React is not defined at App (App.jsx)`.
+The grader requires your repository to be named `e-plantShopping`. You can easily satisfy this in one of two ways:
 
-This happened because:
-1. The project was missing a `vite.config.js` configuration file. Although `@vitejs/plugin-react` was installed in `package.json`, Vite was running without the React plugin, causing esbuild's default transform to look for global `React.createElement` instead of using the automatic JSX runtime (`react/jsx-runtime`).
-2. Several component files did not include explicit `import React from 'react';` imports.
-
-### Solution Applied
-1. Created `vite.config.js` in the root directory importing and activating `@vitejs/plugin-react`:
-   ```javascript
-   import { defineConfig } from 'vite';
-   import react from '@vitejs/plugin-react';
-
-   export default defineConfig({
-     plugins: [react()],
-   });
-   ```
-2. Added `import React from 'react';` and React Router `<Link>` / `<NavLink>` imports across all JSX components to eliminate full-page reloads and prevent any runtime scope errors.
-3. Verified the fix directly in both the development server and production build.
-
----
-
-## Submission & GitHub File URLs Guide
-
-When submitting your assignment, follow these steps to upload your repository to GitHub and collect the 7 required file URLs:
-
-1. **Initialize Git & Commit**:
+### Option A: Rename Existing GitHub Repository (Recommended — 30 seconds)
+1. Open your browser and go to your current repository:  
+   `https://github.com/ronitjain7/paradise-nursery-project`
+2. Click on **Settings** (tab on the top right of the repository page).
+3. Under the **General** section, locate the **Repository name** field.
+4. Change `paradise-nursery-project` to **`e-plantShopping`**.
+5. Click **Rename**.
+6. In your local terminal, update your local git remote URL:
    ```bash
-   git init
+   git remote set-url origin https://github.com/ronitjain7/e-plantShopping.git
    git add .
-   git commit -m "Complete Paradise Nursery houseplant shopping application"
-   ```
-2. **Push to your GitHub account**:
-   ```bash
-   git branch -M main
-   git remote add origin https://github.com/<your-username>/<your-repo-name>.git
+   git commit -m "Update code to match assignment grading feedback"
    git push -u origin main
    ```
-3. **Collect your 7 assignment URLs**:
-   Navigate to each file on GitHub, click the file, and copy the browser URL:
-   - `https://github.com/<your-username>/<your-repo-name>/blob/main/README.md`
-   - `https://github.com/<your-username>/<your-repo-name>/blob/main/src/pages/AboutUs.jsx`
-   - `https://github.com/<your-username>/<your-repo-name>/blob/main/src/App.css`
-   - `https://github.com/<your-username>/<your-repo-name>/blob/main/src/App.jsx`
-   - `https://github.com/<your-username>/<your-repo-name>/blob/main/src/features/cart/CartSlice.jsx`
-   - `https://github.com/<your-username>/<your-repo-name>/blob/main/src/pages/ProductList.jsx`
-   - `https://github.com/<your-username>/<your-repo-name>/blob/main/src/pages/CartItem.jsx`
+
+### Option B: Create a New GitHub Repository Named `e-plantShopping`
+1. Go to `https://github.com/new`.
+2. Name the repository **`e-plantShopping`** and set visibility to **Public**.
+3. In your local terminal, run:
+   ```bash
+   git remote set-url origin https://github.com/ronitjain7/e-plantShopping.git
+   git add .
+   git commit -m "Update code to match assignment grading feedback"
+   git push -u origin main
+   ```

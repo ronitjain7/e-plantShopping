@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Plus,
   Minus,
@@ -15,26 +15,80 @@ import {
   CreditCard,
 } from 'lucide-react';
 import {
-  increaseQuantity,
-  decreaseQuantity,
-  removeFromCart,
+  updateQuantity,
+  removeItem,
   selectCartItems,
-  selectCartCount,
-  selectCartTotal,
 } from '../features/cart/CartSlice.jsx';
 import { FALLBACK_PLANT_IMAGE } from '../data/plants.js';
 
-export default function CartItem() {
+export default function CartItem({ onContinueShopping }) {
   const dispatch = useDispatch();
-  const cartItems = useSelector(selectCartItems);
-  const totalQuantity = useSelector(selectCartCount);
-  const grandTotal = useSelector(selectCartTotal);
+  const navigate = useNavigate();
+
+  // Rubric requirement: 'cart' as the collection of cart items
+  const cart = useSelector(selectCartItems) || [];
 
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
+
+  // Rubric requirement: Calculate overall total using item.cost * item.quantity
+  const calculateTotalAmount = () => {
+    return cart.reduce((total, item) => total + Number(item.cost) * item.quantity, 0);
+  };
+
+  // Rubric requirement: Calculate line item subtotal using item.cost * item.quantity
+  const calculateTotalCost = (item) => {
+    return Number(item.cost) * item.quantity;
+  };
+
+  const calculateTotalQuantity = () => {
+    return cart.reduce((total, item) => total + item.quantity, 0);
+  };
+
+  // Rubric requirement: handleIncrement(item) updates state through updateQuantity
+  const handleIncrement = (item) => {
+    dispatch(
+      updateQuantity({
+        name: item.name,
+        id: item.id,
+        quantity: item.quantity + 1,
+      })
+    );
+  };
+
+  // Rubric requirement: handleDecrement(item) updates state, removes item if quantity reaches 0
+  const handleDecrement = (item) => {
+    if (item.quantity > 1) {
+      dispatch(
+        updateQuantity({
+          name: item.name,
+          id: item.id,
+          quantity: item.quantity - 1,
+        })
+      );
+    } else {
+      dispatch(removeItem(item.name || item.id));
+    }
+  };
+
+  // Rubric requirement: handleRemove(item) through removeItem
+  const handleRemove = (item) => {
+    dispatch(removeItem(item.name || item.id));
+  };
+
+  // Rubric requirement: Continue Shopping handler
+  const handleContinueShopping = (e) => {
+    if (onContinueShopping) {
+      onContinueShopping(e);
+    }
+    navigate('/plants');
+  };
 
   const handleCheckoutClick = () => {
     setCheckoutModalOpen(true);
   };
+
+  const grandTotal = calculateTotalAmount();
+  const totalQuantity = calculateTotalQuantity();
 
   return (
     <div className="cart-page-wrapper">
@@ -52,14 +106,18 @@ export default function CartItem() {
             </p>
           </div>
 
-          <Link to="/plants" className="continue-shopping-link">
+          <button
+            type="button"
+            className="continue-shopping-link"
+            onClick={handleContinueShopping}
+          >
             <ArrowLeft size={18} aria-hidden="true" />
             <span>Continue Shopping</span>
-          </Link>
+          </button>
         </div>
 
         {/* Empty Cart State */}
-        {cartItems.length === 0 ? (
+        {cart.length === 0 ? (
           <div className="empty-cart-card">
             <div className="empty-cart-icon-wrapper" aria-hidden="true">
               <ShoppingBag size={48} />
@@ -68,14 +126,18 @@ export default function CartItem() {
             <p className="empty-cart-text">
               Looks like you haven't added any botanical wonders to your cart yet. Explore our curated categories to discover the perfect plant for your home.
             </p>
-            <Link to="/plants" className="explore-plants-btn">
+            <button
+              type="button"
+              className="explore-plants-btn"
+              onClick={handleContinueShopping}
+            >
               <span>Browse Plants Catalog</span>
               <ArrowRight size={18} aria-hidden="true" />
-            </Link>
+            </button>
           </div>
         ) : (
           <div className="cart-content-grid">
-            {/* Left Column: Cart Items List */}
+            {/* Left Column: Cart Items List using cart.map() */}
             <div className="cart-items-section">
               <div className="cart-items-header-row">
                 <span>Product</span>
@@ -84,11 +146,11 @@ export default function CartItem() {
               </div>
 
               <div className="cart-items-list" role="list">
-                {cartItems.map((item) => {
-                  const lineTotal = item.price * item.quantity;
+                {cart.map((item) => {
+                  const lineTotal = calculateTotalCost(item);
 
                   return (
-                    <article key={item.id} className="cart-item-card" role="listitem">
+                    <article key={item.id || item.name} className="cart-item-card" role="listitem">
                       <div className="cart-item-main">
                         <img
                           src={item.image}
@@ -106,13 +168,14 @@ export default function CartItem() {
                           )}
                           <h3 className="cart-item-name">{item.name}</h3>
                           <p className="cart-item-unit-price">
-                            Unit Price: <strong>${item.price.toFixed(2)}</strong>
+                            Unit Cost: <strong>${Number(item.cost).toFixed(2)}</strong>
                           </p>
 
+                          {/* Delete button calling handleRemove */}
                           <button
                             type="button"
                             className="cart-item-delete-btn"
-                            onClick={() => dispatch(removeFromCart(item.id))}
+                            onClick={() => handleRemove(item)}
                             aria-label={`Remove ${item.name} from cart`}
                           >
                             <Trash2 size={16} aria-hidden="true" />
@@ -123,11 +186,15 @@ export default function CartItem() {
 
                       {/* Quantity Controls */}
                       <div className="cart-item-qty-cell">
-                        <div className="quantity-control-pill" role="group" aria-label={`Quantity for ${item.name}`}>
+                        <div
+                          className="quantity-control-pill"
+                          role="group"
+                          aria-label={`Quantity for ${item.name}`}
+                        >
                           <button
                             type="button"
                             className="qty-btn"
-                            onClick={() => dispatch(decreaseQuantity(item.id))}
+                            onClick={() => handleDecrement(item)}
                             aria-label={`Decrease quantity of ${item.name}`}
                           >
                             <Minus size={15} />
@@ -138,7 +205,7 @@ export default function CartItem() {
                           <button
                             type="button"
                             className="qty-btn"
-                            onClick={() => dispatch(increaseQuantity(item.id))}
+                            onClick={() => handleIncrement(item)}
                             aria-label={`Increase quantity of ${item.name}`}
                           >
                             <Plus size={15} />
@@ -158,10 +225,14 @@ export default function CartItem() {
 
               {/* Action buttons below item list */}
               <div className="cart-items-footer-actions">
-                <Link to="/plants" className="secondary-continue-btn">
+                <button
+                  type="button"
+                  className="secondary-continue-btn"
+                  onClick={handleContinueShopping}
+                >
                   <ArrowLeft size={18} aria-hidden="true" />
                   <span>Continue Shopping</span>
-                </Link>
+                </button>
               </div>
             </div>
 

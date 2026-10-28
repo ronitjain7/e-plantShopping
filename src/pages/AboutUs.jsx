@@ -4,7 +4,7 @@ import { Leaf, Heart, Sprout, ShieldCheck, Sun, Users, ArrowRight } from 'lucide
 
 export default function AboutUs() {
   return (
-    <div className="about-us-page">
+    <div className="about-us-container">
       {/* Hero Section */}
       <section className="about-hero-section">
         <div className="about-hero-container">
